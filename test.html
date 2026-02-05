@@ -12,7 +12,7 @@
   <style>
     :root{
       /* Warm beige like your reference */
-      --fade: hsl(30 32% 85%);
+      --fade: hsl(0 0% 93%);
       /* Slower, elegant fade */
       --fadeDur: 2400ms;
     }
@@ -66,18 +66,28 @@
       z-index: 11;
     }
     #hint.hidden { opacity: 0; }
+
+    .overlay{
+  display:none}
+
+    @media (max-width: 960px) {}
   </style>
 </head>
 
 <body>
 
   <!-- Put your file next to this HTML and name it intro.mp4 -->
+  <img class="overlay overlay--top" src="flowers-top.png" alt="">
+<img class="overlay overlay--bottom" src="flowers-bottom.png" alt="">
+
   <video
     id="intro-video"
-    src="intro.mp4"
+    src="intro2.mp4"
     playsinline
     preload="auto"
   ></video>
+
+  
 
   <div id="fade-overlay"></div>
   <div id="hint">Click to enter</div>
@@ -88,12 +98,12 @@
     const hint = document.getElementById('hint');
 
     // Playback speed
-    video.playbackRate = 1;
+    video.playbackRate = 1.0;
 
     const nextUrl = "https://crownedcreative.co.za";
 
     // Start fading BEFORE the video ends (seconds)
-    const fadeLead = 2.2;
+    const fadeLead = 4.2;
 
     // Must match CSS --fadeDur (in ms)
     const fadeDurMs = 2400;
@@ -142,4 +152,3 @@
 
 </body>
 </html>
-
