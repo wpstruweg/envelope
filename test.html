@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Intro Video</title>
 
-  <!-- Warm up the connection to Canva site -->
+  <!-- Warm up the connection to your destination -->
   <link rel="preconnect" href="https://crownedcreative.co.za">
   <link rel="dns-prefetch" href="https://crownedcreative.co.za">
 
@@ -21,7 +21,7 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      background: hsl(0 0% 93%);
+      background: var(--fade); /* beige behind poster/video */
       overflow: hidden;
       cursor: pointer;
     }
@@ -31,6 +31,7 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      background: #000; /* prevents weird flashes while loading */
     }
 
     /* Full-screen fade overlay */
@@ -47,7 +48,7 @@
       opacity: 1;
     }
 
-    /* Optional hint (remove if you want totally clean) */
+    /* Tap hint */
     #hint {
       position: fixed;
       left: 50%;
@@ -67,28 +68,37 @@
     }
     #hint.hidden { opacity: 0; }
 
-    .overlay{
-  display:none}
+    .overlay { display: none; }
 
-    @media (max-width: 960px) {}
+    /* Desktop only */
+@media (min-width: 1025px) {
+  video {
+    object-fit: cover;      /* example */
+    background:   hsl(0 0% 93%);   /* example */
+              /* example */
+      /* example */
+    margin: 0 auto;           /* example */
+  }
+
+   body {
+    background:
+      url("paper-texture.png") no-repeat center center;
+    background-size:
+  }
+}
   </style>
 </head>
 
 <body>
 
-  <!-- Put your file next to this HTML and name it intro.mp4 -->
   <img class="overlay overlay--top" src="flowers-top.png" alt="">
-<img class="overlay overlay--bottom" src="flowers-bottom.png" alt="">
+  <img class="overlay overlay--bottom" src="flowers-bottom.png" alt="">
 
-<video
-  id="intro-video"
-  src="intro2.mp4"
-  playsinline
-  preload="auto"
-  poster="poster.png"
-></video>
-
-  
+  <video
+    id="intro-video"
+    playsinline
+    preload="auto"
+  ></video>
 
   <div id="fade-overlay"></div>
   <div id="hint">Click to enter</div>
@@ -98,10 +108,25 @@
     const overlay = document.getElementById('fade-overlay');
     const hint = document.getElementById('hint');
 
-    // Playback speed
-    video.playbackRate = 1.0;
-
+    // ====== CONFIG ======
     const nextUrl = "https://crownedcreative.co.za";
+
+    // Breakpoints (adjust if you want)
+    // Mobile: <= 767
+    // Tablet: 768 - 1024
+    // Desktop: >= 1025
+    const MOBILE_MAX = 767;
+    const TABLET_MAX = 1024;
+
+    // Your video files
+    const sources = {
+      mobile:  "intro_mobile.mp4",
+      tablet:  "intro_tablet.mp4",
+      desktop: "intro_desktop.mp4",
+    };
+
+    // Poster only for tablet + mobile (optional)
+    const posterSmallScreens = "poster.png";
 
     // Start fading BEFORE the video ends (seconds)
     const fadeLead = 4.2;
@@ -109,12 +134,50 @@
     // Must match CSS --fadeDur (in ms)
     const fadeDurMs = 2400;
 
-    // Redirect BEFORE the fade reaches full beige (0.0 - 1.0)
+    // Redirect BEFORE fade reaches full beige (0.0 - 1.0)
     const redirectAtPct = 0.6;
 
+    // Playback speed
+    video.playbackRate = 2.0;
+
+    // ====== STATE ======
     let hasPlayed = false;
     let fadeStarted = false;
     let redirected = false;
+    let currentMode = null;
+
+    function getMode() {
+      const w = window.innerWidth;
+      if (w <= MOBILE_MAX) return "mobile";
+      if (w <= TABLET_MAX) return "tablet";
+      return "desktop";
+    }
+
+    function applySourceAndPoster() {
+      const mode = getMode();
+      if (mode === currentMode) return; // no change
+
+      currentMode = mode;
+
+      // If user already started the experience, don't swap sources mid-play.
+      if (hasPlayed) return;
+
+      // Set the correct video source
+      video.src = sources[mode];
+      video.load(); // start fetching metadata/buffer
+
+      // Poster only on tablet+mobile (helps avoid black screen)
+      if (mode === "mobile" || mode === "tablet") {
+        video.setAttribute("poster", posterSmallScreens);
+      } else {
+        video.removeAttribute("poster");
+      }
+    }
+
+    // Call once on load, and again on resize/orientation changes
+    applySourceAndPoster();
+    window.addEventListener("resize", applySourceAndPoster);
+    window.addEventListener("orientationchange", applySourceAndPoster);
 
     function startFadeAndRedirect() {
       if (fadeStarted) return;
@@ -122,7 +185,6 @@
 
       overlay.classList.add('active');
 
-      // Redirect partway through fade so you don't "sit" on full beige
       setTimeout(() => {
         if (redirected) return;
         redirected = true;
@@ -130,11 +192,16 @@
       }, Math.floor(fadeDurMs * redirectAtPct));
     }
 
+    // Click to play (no autoplay)
     document.body.addEventListener('click', () => {
       if (hasPlayed) return;
       hasPlayed = true;
+
       hint.classList.add('hidden');
-      video.play();
+
+      // Try play. If it fails (rare), keep hint hidden anyway.
+      const p = video.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
     });
 
     // Trigger fade before end
@@ -145,7 +212,7 @@
       }
     });
 
-    // Fallback: if timeupdate misses for any reason, redirect on ended
+    // Fallback: if timeupdate misses
     video.addEventListener('ended', () => {
       if (!fadeStarted) startFadeAndRedirect();
     });
@@ -153,5 +220,3 @@
 
 </body>
 </html>
-
-
