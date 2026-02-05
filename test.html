@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intro Video</title>
+
+  <!-- Warm up the connection to Canva site -->
+  <link rel="preconnect" href="https://crownedcreative.co.za">
+  <link rel="dns-prefetch" href="https://crownedcreative.co.za">
+
+  <style>
+    :root{
+      /* Warm beige like your reference */
+      --fade: hsl(30 32% 85%);
+      /* Slower, elegant fade */
+      --fadeDur: 2400ms;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: hsl(0 0% 0%);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Full-screen fade overlay */
+    #fade-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--fade);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--fadeDur) ease;
+      z-index: 10;
+    }
+    #fade-overlay.active {
+      opacity: 1;
+    }
+
+    /* Optional hint (remove if you want totally clean) */
+    #hint {
+      position: fixed;
+      left: 50%;
+      bottom: 2rem;
+      transform: translateX(-50%);
+      color: hsla(0 0% 100% / 0.88);
+      font: 600 1rem/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      letter-spacing: 0.02em;
+      padding: 0.65rem 1.1rem;
+      border-radius: 999rem;
+      background: hsla(0 0% 0% / 0.35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: opacity 260ms ease;
+      user-select: none;
+      z-index: 11;
+    }
+    #hint.hidden { opacity: 0; }
+  </style>
+</head>
+
+<body>
+
+  <!-- Put your file next to this HTML and name it intro.mp4 -->
+  <video
+    id="intro-video"
+    src="intro.mp4"
+    playsinline
+    preload="auto"
+  ></video>
+
+  <div id="fade-overlay"></div>
+  <div id="hint">Click to enter</div>
+
+  <script>
+    const video = document.getElementById('intro-video');
+    const overlay = document.getElementById('fade-overlay');
+    const hint = document.getElementById('hint');
+
+    // Playback speed
+    video.playbackRate = 0.5;
+
+    const nextUrl = "https://crownedcreative.co.za";
+
+    // Start fading BEFORE the video ends (seconds)
+    const fadeLead = 2.2;
+
+    // Must match CSS --fadeDur (in ms)
+    const fadeDurMs = 2400;
+
+    // Redirect BEFORE the fade reaches full beige (0.0 - 1.0)
+    const redirectAtPct = 0.6;
+
+    let hasPlayed = false;
+    let fadeStarted = false;
+    let redirected = false;
+
+    function startFadeAndRedirect() {
+      if (fadeStarted) return;
+      fadeStarted = true;
+
+      overlay.classList.add('active');
+
+      // Redirect partway through fade so you don't "sit" on full beige
+      setTimeout(() => {
+        if (redirected) return;
+        redirected = true;
+        window.location.href = nextUrl;
+      }, Math.floor(fadeDurMs * redirectAtPct));
+    }
+
+    document.body.addEventListener('click', () => {
+      if (hasPlayed) return;
+      hasPlayed = true;
+      hint.classList.add('hidden');
+      video.play();
+    });
+
+    // Trigger fade before end
+    video.addEventListener('timeupdate', () => {
+      if (!video.duration) return;
+      if (video.currentTime >= video.duration - fadeLead) {
+        startFadeAndRedirect();
+      }
+    });
+
+    // Fallback: if timeupdate misses for any reason, redirect on ended
+    video.addEventListener('ended', () => {
+      if (!fadeStarted) startFadeAndRedirect();
+    });
+  </script>
+
+</body>
+</html>
